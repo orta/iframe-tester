@@ -27,7 +27,7 @@ watch(width, updateURL)
 watch(height, updateURL)
 watch(otherAttributes, updateURL)
 
-const iframeAttributes = ["allow", "csp", "importance", "loading", "name", "referrerpolicy", "sandbox", "srcdoc"]
+const iframeAttributes = ["frameborder", "allow", "csp", "importance", "loading", "name", "referrerpolicy", "sandbox", "srcdoc"]
 
 </script>
 

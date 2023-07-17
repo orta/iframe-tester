@@ -5,7 +5,7 @@ import IframeRendererVue from './components/IframeRenderer.vue';
 // type IframeRendererProps = ExtractPublicPropTypes<InstanceType<typeof IframeRendererVue>["$props"]>
 const params = new URLSearchParams(document.location.search)
 const props = {
-  defaultUrl: params.get("url") || "http://localhost:5678/?embedID=orta-test",
+  defaultUrl: params.get("url") || "https://www.youtube.com/embed/MBRqu0YOH14",
   defaultWidth: params.get("width") || "640px",
   defaultHeight: params.get("height") || "480px"
   
