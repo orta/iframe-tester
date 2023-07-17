@@ -23,6 +23,8 @@ jobs:
             ${{ runner.os }}-yarn-
       - name: "Install Dependencies"
         run: yarn
+      - name: "Build"
+        run: yarn build
       - name: "Github Pages Deployment"
         run: |
           git remote set-url origin https://git:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git
