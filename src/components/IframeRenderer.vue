@@ -17,7 +17,7 @@ const updateURL = () => {
   params.set("width", width.value)
   params.set("height", height.value)
   params.set("otherAttributes", JSON.stringify(otherAttributes.value))
-  document.location.search = params.toString()
+  window.history.replaceState({}, "", `${window.location.pathname}?${params}`)
 }
 
 watch(url, updateURL)
