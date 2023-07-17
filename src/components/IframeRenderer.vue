@@ -17,7 +17,8 @@ const updateURL = () => {
   params.set("width", width.value)
   params.set("height", height.value)
   params.set("otherAttributes", JSON.stringify(otherAttributes.value))
-  window.history.replaceState({}, "", `${window.location.pathname}?${params}`)
+  const domain = new URL(window.location.href).origin
+  window.history.replaceState({}, `Iframe tester: ${domain}` , `${window.location.pathname}?${params}`)
 }
 
 watch(url, updateURL)
