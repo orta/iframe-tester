@@ -11,8 +11,6 @@ let width = ref(props.defaultWidth)
 let height = ref(props.defaultHeight)
 let otherAttributes = ref({} as Record<string, string>)
 
-
-
 const updateURL = () => {
   const params = new URLSearchParams()
   params.set("url", url.value)
