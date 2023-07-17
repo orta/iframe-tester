@@ -7,9 +7,11 @@
     "build": "run-p type-check build-only",
     "preview": "vite preview",
     "build-only": "vite build",
-    "type-check": "vue-tsc --noEmit -p tsconfig.app.json --composite false"
+    "type-check": "vue-tsc --noEmit -p tsconfig.app.json --composite false",
+    "deploy": "gh-pages -d dist"
   },
   "dependencies": {
+    "gh-pages": "^5.0.0",
     "vue": "^3.3.4"
   },
   "devDependencies": {
