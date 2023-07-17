@@ -35,7 +35,7 @@ watch(autoReload, updateURL)
 const iframeAttributes = ["frameborder", "allow", "csp", "importance", "loading", "name", "referrerpolicy", "sandbox", "srcdoc"]
 
 let timer: number | null = null
-if (autoReload && !timer) {
+if (autoReload.value && !timer) {
   timer = setInterval(() => {
     iframekey.value++
   }, 5000)
