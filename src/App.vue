@@ -7,15 +7,18 @@ const params = new URLSearchParams(document.location.search)
 const props = {
   defaultUrl: params.get("url") || "https://www.youtube.com/embed/MBRqu0YOH14",
   defaultWidth: params.get("width") || "640px",
-  defaultHeight: params.get("height") || "480px"
-  
+  defaultHeight: params.get("height") || "480px",
+  defaultOtherAttributes: JSON.parse(params.get("otherAttributes") || "{}"),
+  autoReload:!!params.get("autoReload")
 }
+
 </script>
 
 <template>
   <main>
     <h1>iframe tester</h1>
     <h3>Enter a URL to set as the iframe, all possible params are saved into the URL so you can refresh/share.</h3>
+
     <IframeRendererVue v-bind="props" />
   </main>
 </template>
@@ -36,4 +39,5 @@ main {
   flex-wrap: wrap;
   flex-direction: column;
 }
+
 </style>
