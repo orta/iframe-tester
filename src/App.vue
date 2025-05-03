@@ -9,7 +9,8 @@ const props = {
   defaultWidth: params.get("width") || "640px",
   defaultHeight: params.get("height") || "480px",
   defaultOtherAttributes: JSON.parse(params.get("otherAttributes") || "{}"),
-  autoReload:!!params.get("autoReload")
+  autoReload:!!params.get("autoReload"),
+  showMessageEvents: !!params.get("showMessageEvents")
 }
 
 </script>

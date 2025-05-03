@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, reactive, watch } from "vue"
+import { ref, reactive, watch, onMounted, onUnmounted } from "vue"
 
 const props = defineProps<{
   defaultUrl: string
@@ -7,17 +7,20 @@ const props = defineProps<{
   defaultHeight: string
   defaultOtherAttributes: Record<string, string>
   autoReload: boolean
+  showMessageEvents: boolean
 }>()
 let url = ref(props.defaultUrl)
 let width = ref(props.defaultWidth)
 let height = ref(props.defaultHeight)
 let otherAttributes = reactive(props.defaultOtherAttributes)
 let autoReload = ref(props.autoReload)
+let showMessageEventsRef = ref(props.showMessageEvents)
 let iframekey = ref(1)
 
 const updateURL = () => {
   const params = new URLSearchParams()
   if (autoReload.value) params.set("autoReload", "1")
+  if (showMessageEventsRef.value) params.set("showMessageEvents", "1")
   params.set("url", url.value)
   params.set("width", width.value)
   params.set("height", height.value)
@@ -31,6 +34,7 @@ watch(width, updateURL)
 watch(height, updateURL)
 watch(otherAttributes, updateURL)
 watch(autoReload, updateURL)
+watch(showMessageEventsRef, updateURL)
 
 const iframeAttributes = ["frameborder", "allow", "csp", "importance", "loading", "name", "referrerpolicy", "sandbox", "srcdoc"]
 
@@ -43,6 +47,33 @@ if (autoReload.value && !timer) {
   clearInterval(timer)
   timer = null
 }
+
+const receivedMessages = ref<any[]>([])
+
+const handleMessage = (event: MessageEvent) => {
+  // Potentially filter messages by origin here if needed
+  // if (event.origin !== 'expected_origin') return;
+
+  const suppress = event.data.type === "TIMER_TICK" || event.data.type === "TIMER_SYNC"
+  if (suppress) return
+
+  receivedMessages.value.unshift({
+    data: event.data,
+    origin: event.origin,
+    timestamp: new Date().toLocaleTimeString()
+  })
+}
+
+onMounted(() => {
+  window.addEventListener('message', handleMessage)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('message', handleMessage)
+  if (timer) {
+    clearInterval(timer)
+  }
+})
 </script>
 
 <template>
@@ -52,13 +83,31 @@ if (autoReload.value && !timer) {
   </div>
 
   <input id="url" v-model="url" placeholder="URL here" />
-  <iframe :key="iframekey" :width="width" :height="height" :src="url" v-bind="otherAttributes"></iframe>
+
+  <div class="main-content">
+    <iframe :key="iframekey" :width="width" :height="height" :src="url" v-bind="otherAttributes"></iframe>
+
+    <div v-if="showMessageEventsRef" class="sidebar">
+      <h3>Received Messages:</h3>
+      <ul>
+        <li v-for="(msg, index) in receivedMessages" :key="index">
+          <pre><code>{{ JSON.stringify(msg, null, 2) }}</code></pre>
+        </li>
+      </ul>
+      <button @click="receivedMessages = []" v-if="receivedMessages.length > 0">Clear Messages</button>
+    </div>
+  </div>
 
   <div>
     <p>Size:</p>
     <input v-model="width" placeholder="640px" />
     by
     <input v-model="height" placeholder="480px" />
+  </div>
+
+  <div>
+    <label for="showMessages">Show Message Events</label>
+    <input type="checkbox" id="showMessages" v-model="showMessageEventsRef" />
   </div>
 
   <div class="row">
@@ -113,6 +162,8 @@ h3 {
 iframe {
   margin-top: 12px;
   margin-bottom: 36px;
+  flex-grow: 1; /* Allow iframe to grow */
+  margin-right: 20px; /* Space between iframe and sidebar */
 }
 
 input#url {
@@ -128,5 +179,43 @@ div.row {
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
+}
+
+.main-content {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start; /* Align items at the top */
+}
+
+.sidebar {
+  width: 360px; /* Adjust width as needed */
+  border-left: 1px solid #ccc;
+  padding-left: 20px;
+  height: calc(100vh - 200px); /* Adjust height based on your layout */
+  overflow-y: auto;
+}
+
+.sidebar h3 {
+  margin-top: 0;
+}
+
+.sidebar ul {
+  list-style: none;
+  padding: 0;
+}
+
+.sidebar li {
+  margin-bottom: 10px;
+  border-bottom: 1px dashed #eee;
+  padding-bottom: 10px;
+}
+
+.sidebar pre {
+  white-space: pre-wrap; /* Wrap long lines */
+  word-break: break-all; /* Break words if needed */
+  background-color: #f5f5f5;
+  padding: 5px;
+  border-radius: 4px;
+  font-size: 12px;
 }
 </style>
