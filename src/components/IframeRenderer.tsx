@@ -26,6 +26,8 @@ export default function IframeRenderer(props: IframeRendererProps) {
   const [iframekey, setIframekey] = useState(1)
   const [receivedMessages, setReceivedMessages] = useState<ReceivedMessage[]>([])
   const [eventsSidebarOpen, setEventsSidebarOpen] = useState(false)
+  const [filterByIframeOrigin, setFilterByIframeOrigin] = useState(true)
+  const [attributesExpanded, setAttributesExpanded] = useState(false)
   const timerRef = useRef<number | null>(null)
 
   const iframeAttributes = [
@@ -76,6 +78,18 @@ export default function IframeRenderer(props: IframeRendererProps) {
       const suppress = event.data.type === "TIMER_TICK" || event.data.type === "TIMER_SYNC"
       if (suppress) return
 
+      // Filter by iframe origin if enabled
+      if (filterByIframeOrigin) {
+        try {
+          const iframeOrigin = new URL(url).origin
+          if (event.origin !== iframeOrigin) {
+            return
+          }
+        } catch (e) {
+          // Invalid URL, skip filtering
+        }
+      }
+
       setReceivedMessages((prev) => [
         {
           data: event.data,
@@ -91,7 +105,7 @@ export default function IframeRenderer(props: IframeRendererProps) {
     return () => {
       window.removeEventListener("message", handleMessage)
     }
-  }, [])
+  }, [filterByIframeOrigin, url])
 
   const handleAttributeChange = (key: string, value: string) => {
     setOtherAttributes((prev) => ({
@@ -135,7 +149,7 @@ export default function IframeRenderer(props: IframeRendererProps) {
     <>
       <header className="page-header">
         <h1>iframe tester</h1>
-        <p>Enter a URL to set as the iframe, all possible params are saved into the URL so you can refresh/share.</p>
+        <p className="subtitle">Enter a URL to set as the iframe, all possible params are saved into the URL so you can refresh/share.</p>
       </header>
       <div className="container">
         <div className="sidebar">
@@ -161,20 +175,25 @@ export default function IframeRenderer(props: IframeRendererProps) {
         </div>
 
         <div className="sidebar-section">
-          <h3>Iframe Attributes:</h3>
-          <div className="attributes-list">
-            {iframeAttributes.map((attr) => (
-              <div key={attr.name} className="attribute-item">
-                <label>
-                  <a href={`https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe#${attr.name}`} target="_blank" rel="noopener noreferrer">
-                    {attr.name}
-                  </a>
-                </label>
-                <p className="attribute-description">{attr.description}</p>
-                <input value={otherAttributes[attr.name] || ""} onChange={(e) => handleAttributeChange(attr.name, e.target.value)} placeholder="" />
-              </div>
-            ))}
+          <div className="collapsible-header" onClick={() => setAttributesExpanded(!attributesExpanded)}>
+            <h3>Iframe Attributes</h3>
+            <span className={`collapse-icon ${attributesExpanded ? 'expanded' : ''}`}>▼</span>
           </div>
+          {attributesExpanded && (
+            <div className="attributes-list">
+              {iframeAttributes.map((attr) => (
+                <div key={attr.name} className="attribute-item">
+                  <label>
+                    <a href={`https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe#${attr.name}`} target="_blank" rel="noopener noreferrer">
+                      {attr.name}
+                    </a>
+                  </label>
+                  <p className="attribute-description">{attr.description}</p>
+                  <input value={otherAttributes[attr.name] || ""} onChange={(e) => handleAttributeChange(attr.name, e.target.value)} placeholder="" />
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="sidebar-section code-section">
@@ -212,11 +231,23 @@ export default function IframeRenderer(props: IframeRendererProps) {
           <div className="events-sidebar-content">
             <div className="events-sidebar-header">
               <h3>Received Messages</h3>
-              {receivedMessages.length > 0 && (
-                <button className="clear-button" onClick={() => setReceivedMessages([])}>
-                  Clear
-                </button>
-              )}
+              <div className="header-controls">
+                {receivedMessages.length > 0 && (
+                  <button className="clear-button" onClick={() => setReceivedMessages([])}>
+                    Clear
+                  </button>
+                )}
+              </div>
+            </div>
+            <div className="events-filter">
+              <label>
+                <input
+                  type="checkbox"
+                  checked={filterByIframeOrigin}
+                  onChange={(e) => setFilterByIframeOrigin(e.target.checked)}
+                />
+                Only show events from iframe origin
+              </label>
             </div>
             <div className="events-list">
               {receivedMessages.length === 0 ? (
