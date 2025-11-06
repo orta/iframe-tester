@@ -25,10 +25,18 @@ export default function IframeRenderer(props: IframeRendererProps) {
   const [showMessageEventsRef, setShowMessageEventsRef] = useState(props.showMessageEvents)
   const [iframekey, setIframekey] = useState(1)
   const [receivedMessages, setReceivedMessages] = useState<ReceivedMessage[]>([])
-  const [eventsSidebarOpen, setEventsSidebarOpen] = useState(false)
+  const [eventsSidebarOpen, setEventsSidebarOpen] = useState(() => {
+    const stored = localStorage.getItem('eventsSidebarOpen')
+    return stored ? JSON.parse(stored) : false
+  })
   const [filterByIframeOrigin, setFilterByIframeOrigin] = useState(true)
   const [attributesExpanded, setAttributesExpanded] = useState(false)
   const timerRef = useRef<number | null>(null)
+
+  // Save events sidebar state to localStorage
+  useEffect(() => {
+    localStorage.setItem('eventsSidebarOpen', JSON.stringify(eventsSidebarOpen))
+  }, [eventsSidebarOpen])
 
   const iframeAttributes = [
     { name: "allow", description: "Specifies a Permissions Policy for the iframe (e.g., 'camera; microphone')" },
@@ -230,7 +238,7 @@ export default function IframeRenderer(props: IframeRendererProps) {
         {eventsSidebarOpen && (
           <div className="events-sidebar-content">
             <div className="events-sidebar-header">
-              <h3>Received Messages</h3>
+              <h3>Received Messages ({receivedMessages.length})</h3>
               <div className="header-controls">
                 {receivedMessages.length > 0 && (
                   <button className="clear-button" onClick={() => setReceivedMessages([])}>
@@ -254,13 +262,18 @@ export default function IframeRenderer(props: IframeRendererProps) {
                 <p className="no-events">No events received yet</p>
               ) : (
                 <ul>
-                  {receivedMessages.map((msg, index) => (
-                    <li key={index}>
-                      <pre>
-                        <code>{JSON.stringify(msg, null, 2)}</code>
-                      </pre>
-                    </li>
-                  ))}
+                  {receivedMessages.map((msg, index) => {
+                    const displayMsg = filterByIframeOrigin
+                      ? { data: msg.data, timestamp: msg.timestamp }
+                      : msg
+                    return (
+                      <li key={index}>
+                        <pre>
+                          <code>{JSON.stringify(displayMsg, null, 2)}</code>
+                        </pre>
+                      </li>
+                    )
+                  })}
                 </ul>
               )}
             </div>
