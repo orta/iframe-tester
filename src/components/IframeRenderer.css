@@ -1,28 +1,3 @@
-.page-header {
-  padding: 16px 20px;
-  border-bottom: 1px solid #e0e0e0;
-  background-color: #fafafa;
-  flex-shrink: 0;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 20px;
-}
-
-.page-header h1 {
-  margin: 0;
-  font-size: 1.5rem;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.page-header .subtitle {
-  margin: 0;
-  color: #666;
-  font-size: 13px;
-  text-align: right;
-}
-
 .container {
   display: flex;
   flex: 1;
@@ -394,4 +369,45 @@
 
 .events-list code {
   font-family: 'Courier New', monospace;
+}
+
+.load-button {
+  padding: 8px 16px;
+  background-color: #0066cc;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background-color 0.2s;
+  width: 100%;
+}
+
+.load-button:hover:not(:disabled) {
+  background-color: #0052a3;
+}
+
+.load-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.error-message {
+  color: #cc0000;
+  font-size: 13px;
+  margin: 0;
+}
+
+.script-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  min-height: 200px;
+}
+
+.script-container iframe {
+  border: 1px solid #e0e0e0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }

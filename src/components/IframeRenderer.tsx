@@ -162,10 +162,6 @@ export default function IframeRenderer(props: IframeRendererProps) {
 
   return (
     <>
-      <header className="page-header">
-        <h1>iframe tester</h1>
-        <p className="subtitle">Enter a URL to set as the iframe, all possible params are saved into the URL so you can refresh/share.</p>
-      </header>
       <div className="container">
         <div className="sidebar">
         <div className="sidebar-section">
