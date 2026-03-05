@@ -32,6 +32,7 @@ export default function IframeRenderer(props: IframeRendererProps) {
   const [filterByIframeOrigin, setFilterByIframeOrigin] = useState(true)
   const [attributesExpanded, setAttributesExpanded] = useState(false)
   const timerRef = useRef<number | null>(null)
+  const updateURLTimeoutRef = useRef<number | null>(null)
 
   // Save events sidebar state to localStorage
   useEffect(() => {
@@ -48,20 +49,26 @@ export default function IframeRenderer(props: IframeRendererProps) {
     { name: "srcdoc", description: "Inline HTML to embed, overriding the src attribute" }
   ]
 
-  const updateURL = () => {
-    const params = new URLSearchParams()
-    if (autoReload) params.set("autoReload", "1")
-    if (showMessageEventsRef) params.set("showMessageEvents", "1")
-    params.set("url", url)
-    params.set("width", width)
-    params.set("height", height)
-    params.set("otherAttributes", JSON.stringify(otherAttributes))
-    const domain = new URL(window.location.href).origin
-    window.history.replaceState({}, `Iframe tester: ${domain}`, `${window.location.pathname}?${params}`)
-  }
-
   useEffect(() => {
-    updateURL()
+    if (updateURLTimeoutRef.current) {
+      clearTimeout(updateURLTimeoutRef.current)
+    }
+    updateURLTimeoutRef.current = window.setTimeout(() => {
+      const params = new URLSearchParams()
+      if (autoReload) params.set("autoReload", "1")
+      if (showMessageEventsRef) params.set("showMessageEvents", "1")
+      params.set("url", url)
+      params.set("width", width)
+      params.set("height", height)
+      params.set("otherAttributes", JSON.stringify(otherAttributes))
+      const domain = new URL(window.location.href).origin
+      window.history.replaceState({}, `Iframe tester: ${domain}`, `${window.location.pathname}?${params}`)
+    }, 300)
+    return () => {
+      if (updateURLTimeoutRef.current) {
+        clearTimeout(updateURLTimeoutRef.current)
+      }
+    }
   }, [url, width, height, otherAttributes, autoReload, showMessageEventsRef])
 
   useEffect(() => {
