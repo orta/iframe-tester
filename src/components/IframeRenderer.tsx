@@ -26,7 +26,7 @@ export default function IframeRenderer(props: IframeRendererProps) {
   const [iframekey, setIframekey] = useState(1)
   const [receivedMessages, setReceivedMessages] = useState<ReceivedMessage[]>([])
   const [eventsSidebarOpen, setEventsSidebarOpen] = useState(() => {
-    const stored = localStorage.getItem('eventsSidebarOpen')
+    const stored = localStorage.getItem("eventsSidebarOpen")
     return stored ? JSON.parse(stored) : false
   })
   const [filterByIframeOrigin, setFilterByIframeOrigin] = useState(true)
@@ -35,7 +35,7 @@ export default function IframeRenderer(props: IframeRendererProps) {
 
   // Save events sidebar state to localStorage
   useEffect(() => {
-    localStorage.setItem('eventsSidebarOpen', JSON.stringify(eventsSidebarOpen))
+    localStorage.setItem("eventsSidebarOpen", JSON.stringify(eventsSidebarOpen))
   }, [eventsSidebarOpen])
 
   const iframeAttributes = [
@@ -83,21 +83,34 @@ export default function IframeRenderer(props: IframeRendererProps) {
 
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
+      console.log("Message event received:", {
+        eventOrigin: event.origin,
+        eventData: event.data,
+        iframeUrl: url
+      })
+
       const suppress = event.data.type === "TIMER_TICK" || event.data.type === "TIMER_SYNC"
-      if (suppress) return
+      if (suppress) {
+        console.log("Suppressed TIMER event")
+        return
+      }
 
       // Filter by iframe origin if enabled
       if (filterByIframeOrigin) {
         try {
           const iframeOrigin = new URL(url).origin
+          console.log("Filter check:", { iframeOrigin, eventOrigin: event.origin, matches: event.origin === iframeOrigin })
           if (event.origin !== iframeOrigin) {
+            console.log("Filtered out due to origin mismatch")
             return
           }
         } catch (e) {
+          console.log("Invalid URL, skipping filtering:", e)
           // Invalid URL, skip filtering
         }
       }
 
+      console.log("Adding message to list")
       setReceivedMessages((prev) => [
         {
           data: event.data,
@@ -161,126 +174,128 @@ export default function IframeRenderer(props: IframeRendererProps) {
       </header>
       <div className="container">
         <div className="sidebar">
-        <div className="sidebar-section">
-          <label htmlFor="url-input">URL:</label>
-          <input id="url-input" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="Enter iframe URL" />
-        </div>
-
-        <div className="sidebar-section">
-          <label>Size:</label>
-          <div className="size-inputs">
-            <input value={width} onChange={(e) => setWidth(e.target.value)} placeholder="640px" />
-            <span>×</span>
-            <input value={height} onChange={(e) => setHeight(e.target.value)} placeholder="480px" />
+          <div className="sidebar-section">
+            <label htmlFor="url-input">URL:</label>
+            <input id="url-input" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="Enter iframe URL" />
           </div>
-        </div>
 
-        <div className="sidebar-section">
-          <label htmlFor="auto-reload">
-            <input type="checkbox" id="auto-reload" checked={autoReload} onChange={(e) => setAutoReload(e.target.checked)} />
-            Auto-reload every 5s
-          </label>
-        </div>
-
-        <div className="sidebar-section">
-          <div className="collapsible-header" onClick={() => setAttributesExpanded(!attributesExpanded)}>
-            <h3>Iframe Attributes</h3>
-            <span className={`collapse-icon ${attributesExpanded ? 'expanded' : ''}`}>▼</span>
-          </div>
-          {attributesExpanded && (
-            <div className="attributes-list">
-              {iframeAttributes.map((attr) => (
-                <div key={attr.name} className="attribute-item">
-                  <label>
-                    <a href={`https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe#${attr.name}`} target="_blank" rel="noopener noreferrer">
-                      {attr.name}
-                    </a>
-                  </label>
-                  <p className="attribute-description">{attr.description}</p>
-                  <input value={otherAttributes[attr.name] || ""} onChange={(e) => handleAttributeChange(attr.name, e.target.value)} placeholder="" />
-                </div>
-              ))}
+          <div className="sidebar-section">
+            <label>Size:</label>
+            <div className="size-inputs">
+              <input value={width} onChange={(e) => setWidth(e.target.value)} placeholder="640px" />
+              <span>×</span>
+              <input value={height} onChange={(e) => setHeight(e.target.value)} placeholder="480px" />
             </div>
-          )}
-        </div>
+          </div>
 
-        <div className="sidebar-section code-section">
-          <h3>Code:</h3>
-          <pre>
-            <code>
-              {`<iframe
+          <div className="sidebar-section">
+            <label htmlFor="auto-reload">
+              <input type="checkbox" id="auto-reload" checked={autoReload} onChange={(e) => setAutoReload(e.target.checked)} />
+              Auto-reload every 5s
+            </label>
+          </div>
+
+          <div className="sidebar-section">
+            <div className="collapsible-header" onClick={() => setAttributesExpanded(!attributesExpanded)}>
+              <h3>Iframe Attributes</h3>
+              <span className={`collapse-icon ${attributesExpanded ? "expanded" : ""}`}>▼</span>
+            </div>
+            {attributesExpanded && (
+              <div className="attributes-list">
+                {iframeAttributes.map((attr) => (
+                  <div key={attr.name} className="attribute-item">
+                    <label>
+                      <a
+                        href={`https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe#${attr.name}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {attr.name}
+                      </a>
+                    </label>
+                    <p className="attribute-description">{attr.description}</p>
+                    <input
+                      value={otherAttributes[attr.name] || ""}
+                      onChange={(e) => handleAttributeChange(attr.name, e.target.value)}
+                      placeholder=""
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="sidebar-section code-section">
+            <h3>Code:</h3>
+            <pre>
+              <code>
+                {`<iframe
   width="${width}"
   height="${height}"
-  src="${url}"${Object.entries(otherAttributes).filter(([, value]) => value).length > 0 ? '\n  ' : ''}${Object.entries(otherAttributes)
-                .filter(([, value]) => value)
-                .map(([key, value]) => `${key}="${value}"`)
-                .join('\n  ')}
+  src="${url}"${Object.entries(otherAttributes).filter(([, value]) => value).length > 0 ? "\n  " : ""}${Object.entries(otherAttributes)
+                  .filter(([, value]) => value)
+                  .map(([key, value]) => `${key}="${value}"`)
+                  .join("\n  ")}
 ></iframe>`}
-            </code>
-          </pre>
+              </code>
+            </pre>
+          </div>
         </div>
-      </div>
 
-      <div className="main-content">
-        <div className="iframe-container">
-          <iframe key={iframekey} width={width} height={height} src={url} {...otherAttributes}></iframe>
-          <div className="resize-handle resize-handle-top" onMouseDown={handleMouseDown("top")}></div>
-          <div className="resize-handle resize-handle-right" onMouseDown={handleMouseDown("right")}></div>
-          <div className="resize-handle resize-handle-bottom" onMouseDown={handleMouseDown("bottom")}></div>
-          <div className="resize-handle resize-handle-left" onMouseDown={handleMouseDown("left")}></div>
+        <div className="main-content">
+          <div className="iframe-container">
+            <iframe key={iframekey} width={width} height={height} src={url} {...otherAttributes}></iframe>
+            <div className="resize-handle resize-handle-top" onMouseDown={handleMouseDown("top")}></div>
+            <div className="resize-handle resize-handle-right" onMouseDown={handleMouseDown("right")}></div>
+            <div className="resize-handle resize-handle-bottom" onMouseDown={handleMouseDown("bottom")}></div>
+            <div className="resize-handle resize-handle-left" onMouseDown={handleMouseDown("left")}></div>
+          </div>
         </div>
-      </div>
 
-      <div className={`events-sidebar ${eventsSidebarOpen ? 'open' : ''}`}>
-        <div className="events-sidebar-toggle" onClick={() => setEventsSidebarOpen(!eventsSidebarOpen)}>
-          <span className="events-label">EVENTS</span>
-        </div>
-        {eventsSidebarOpen && (
-          <div className="events-sidebar-content">
-            <div className="events-sidebar-header">
-              <h3>Received Messages ({receivedMessages.length})</h3>
-              <div className="header-controls">
-                {receivedMessages.length > 0 && (
-                  <button className="clear-button" onClick={() => setReceivedMessages([])}>
-                    Clear
-                  </button>
+        <div className={`events-sidebar ${eventsSidebarOpen ? "open" : ""}`}>
+          <div className="events-sidebar-toggle" onClick={() => setEventsSidebarOpen(!eventsSidebarOpen)}>
+            <span className="events-label">EVENTS</span>
+          </div>
+          {eventsSidebarOpen && (
+            <div className="events-sidebar-content">
+              <div className="events-sidebar-header">
+                <h3>Received Messages ({receivedMessages.length})</h3>
+                <div className="header-controls">
+                  {receivedMessages.length > 0 && (
+                    <button className="clear-button" onClick={() => setReceivedMessages([])}>
+                      Clear
+                    </button>
+                  )}
+                </div>
+              </div>
+              <div className="events-filter">
+                <label>
+                  <input type="checkbox" checked={filterByIframeOrigin} onChange={(e) => setFilterByIframeOrigin(e.target.checked)} />
+                  Only show events from iframe origin
+                </label>
+              </div>
+              <div className="events-list">
+                {receivedMessages.length === 0 ? (
+                  <p className="no-events">No events received yet</p>
+                ) : (
+                  <ul>
+                    {receivedMessages.map((msg, index) => {
+                      const displayMsg = filterByIframeOrigin ? { data: msg.data, timestamp: msg.timestamp } : msg
+                      return (
+                        <li key={index}>
+                          <pre>
+                            <code>{JSON.stringify(displayMsg, null, 2)}</code>
+                          </pre>
+                        </li>
+                      )
+                    })}
+                  </ul>
                 )}
               </div>
             </div>
-            <div className="events-filter">
-              <label>
-                <input
-                  type="checkbox"
-                  checked={filterByIframeOrigin}
-                  onChange={(e) => setFilterByIframeOrigin(e.target.checked)}
-                />
-                Only show events from iframe origin
-              </label>
-            </div>
-            <div className="events-list">
-              {receivedMessages.length === 0 ? (
-                <p className="no-events">No events received yet</p>
-              ) : (
-                <ul>
-                  {receivedMessages.map((msg, index) => {
-                    const displayMsg = filterByIframeOrigin
-                      ? { data: msg.data, timestamp: msg.timestamp }
-                      : msg
-                    return (
-                      <li key={index}>
-                        <pre>
-                          <code>{JSON.stringify(displayMsg, null, 2)}</code>
-                        </pre>
-                      </li>
-                    )
-                  })}
-                </ul>
-              )}
-            </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
-    </div>
     </>
   )
 }
