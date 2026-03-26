@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from "react"
 import "./IframeRenderer.css"
+import { scriptAttributes } from "../data/element-attrs"
 
 interface ScriptIframeRendererProps {
   defaultScriptUrl: string
+  defaultScriptAttrs: Record<string, string>
 }
 
 interface ReceivedMessage {
@@ -24,6 +26,8 @@ export default function ScriptIframeRenderer(props: ScriptIframeRendererProps) {
     return stored ? JSON.parse(stored) : false
   })
   const [filterByIframeOrigin, setFilterByIframeOrigin] = useState(true)
+  const [scriptAttrValues, setScriptAttrValues] = useState<Record<string, string>>(props.defaultScriptAttrs)
+  const [attributesExpanded, setAttributesExpanded] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
   const updateURLTimeoutRef = useRef<number | null>(null)
 
@@ -39,6 +43,8 @@ export default function ScriptIframeRenderer(props: ScriptIframeRendererProps) {
       const params = new URLSearchParams()
       params.set("mode", "script")
       if (scriptUrl) params.set("scriptUrl", scriptUrl)
+      const nonEmpty = Object.fromEntries(Object.entries(scriptAttrValues).filter(([, v]) => v))
+      if (Object.keys(nonEmpty).length > 0) params.set("scriptAttrs", JSON.stringify(nonEmpty))
       const domain = new URL(window.location.href).origin
       window.history.replaceState({}, `Script iframe tester: ${domain}`, `${window.location.pathname}?${params}`)
     }, 300)
@@ -47,7 +53,7 @@ export default function ScriptIframeRenderer(props: ScriptIframeRendererProps) {
         clearTimeout(updateURLTimeoutRef.current)
       }
     }
-  }, [scriptUrl])
+  }, [scriptUrl, scriptAttrValues])
 
   const loadScript = useCallback(() => {
     if (!scriptUrl) return
@@ -107,6 +113,8 @@ export default function ScriptIframeRenderer(props: ScriptIframeRendererProps) {
       const suppress = event.data?.type === "TIMER_TICK" || event.data?.type === "TIMER_SYNC"
       if (suppress) return
 
+      if (typeof event.data?.source === "string" && /devtools/i.test(event.data.source)) return
+
       if (filterByIframeOrigin && origin) {
         if (event.origin !== origin) return
       }
@@ -162,10 +170,67 @@ export default function ScriptIframeRenderer(props: ScriptIframeRendererProps) {
             </div>
           )}
 
+          <div className="sidebar-section">
+            <div className="collapsible-header" onClick={() => setAttributesExpanded(!attributesExpanded)}>
+              <h3>Script Attributes</h3>
+              <span className={`collapse-icon ${attributesExpanded ? "expanded" : ""}`}>▼</span>
+            </div>
+            {attributesExpanded && (
+              <div className="attributes-list">
+                {scriptAttributes.map((attr) => {
+                  const isBool = ["async", "defer", "nomodule"].includes(attr.name)
+                  const currentValue = scriptAttrValues[attr.name] || ""
+                  return (
+                    <div key={attr.name} className="attribute-item">
+                      <label className={isBool ? "attr-label-inline" : undefined}>
+                        {isBool && (
+                          <input
+                            type="checkbox"
+                            checked={!!currentValue}
+                            onChange={(e) =>
+                              setScriptAttrValues((prev) => ({ ...prev, [attr.name]: e.target.checked ? attr.name : "" }))
+                            }
+                          />
+                        )}
+                        <a
+                          href={`https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script#${attr.name}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          {attr.name}
+                        </a>
+                      </label>
+                      <p className="attribute-description">{attr.description}</p>
+                      {isBool ? null : attr.options ? (
+                        <select
+                          value={currentValue}
+                          onChange={(e) => setScriptAttrValues((prev) => ({ ...prev, [attr.name]: e.target.value }))}
+                        >
+                          {attr.options.map((opt) => (
+                            <option key={opt} value={opt}>{opt || "(default)"}</option>
+                          ))}
+                        </select>
+                      ) : (
+                        <input
+                          value={currentValue}
+                          onChange={(e) => setScriptAttrValues((prev) => ({ ...prev, [attr.name]: e.target.value }))}
+                          placeholder=""
+                        />
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+
           <div className="sidebar-section code-section">
             <h3>Embed code:</h3>
             <pre>
-              <code>{`<script src="${scriptUrl}"></script>`}</code>
+              <code>{`<script src="${scriptUrl}"${Object.entries(scriptAttrValues)
+                .filter(([, v]) => v)
+                .map(([k, v]) => (v === k ? ` ${k}` : ` ${k}="${v}"`))
+                .join("")}></script>`}</code>
             </pre>
           </div>
         </div>

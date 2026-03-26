@@ -21,6 +21,7 @@ function App() {
 
   const scriptProps = {
     defaultScriptUrl: params.get("scriptUrl") || "",
+    defaultScriptAttrs: JSON.parse(params.get("scriptAttrs") || "{}"),
   }
 
   return (

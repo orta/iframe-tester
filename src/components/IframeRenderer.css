@@ -197,12 +197,75 @@
   line-height: 1.4;
 }
 
-.attribute-item input {
+.attribute-item input[type="text"],
+.attribute-item input:not([type]),
+.attribute-item select {
   width: 100%;
   padding: 6px;
   border: 1px solid #ccc;
   border-radius: 4px;
   font-size: 13px;
+  box-sizing: border-box;
+}
+
+.attribute-item input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.attr-label-inline {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.token-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.token-active,
+.token-available {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.token-chip {
+  font-size: 11px;
+  padding: 2px 7px;
+  border-radius: 10px;
+  border: 1px solid;
+  cursor: pointer;
+  line-height: 1.6;
+  font-family: monospace;
+}
+
+.token-chip--active {
+  background: #1a73e8;
+  border-color: #1a73e8;
+  color: #fff;
+}
+
+.token-chip--active:hover {
+  background: #c0392b;
+  border-color: #c0392b;
+}
+
+.token-chip--available {
+  background: #f0f0f0;
+  border-color: #ccc;
+  color: #333;
+}
+
+.token-chip--available:hover {
+  background: #e0eefa;
+  border-color: #1a73e8;
+  color: #1a73e8;
 }
 
 .code-section {

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react"
 import "./IframeRenderer.css"
+import { iframeAttributes } from "../data/element-attrs"
 
 interface IframeRendererProps {
   defaultUrl: string
@@ -68,16 +69,6 @@ export default function IframeRenderer(props: IframeRendererProps) {
   useEffect(() => {
     localStorage.setItem("eventsSidebarOpen", JSON.stringify(eventsSidebarOpen))
   }, [eventsSidebarOpen])
-
-  const iframeAttributes = [
-    { name: "allow", description: "Specifies a Permissions Policy for the iframe (e.g., 'camera; microphone')" },
-    { name: "allowfullscreen", description: "Set to true to allow the iframe to activate fullscreen mode" },
-    { name: "loading", description: "Indicates how the browser should load the iframe (eager or lazy)" },
-    { name: "name", description: "A targetable name for the embedded browsing context" },
-    { name: "referrerpolicy", description: "Controls which referrer is sent when fetching the iframe's resource" },
-    { name: "sandbox", description: "Applies extra restrictions to the content in the frame" },
-    { name: "srcdoc", description: "Inline HTML to embed, overriding the src attribute" }
-  ]
 
   useEffect(() => {
     if (updateURLTimeoutRef.current) {
@@ -265,25 +256,67 @@ export default function IframeRenderer(props: IframeRendererProps) {
             </div>
             {attributesExpanded && (
               <div className="attributes-list">
-                {iframeAttributes.map((attr) => (
-                  <div key={attr.name} className="attribute-item">
-                    <label>
-                      <a
-                        href={`https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe#${attr.name}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        {attr.name}
-                      </a>
-                    </label>
-                    <p className="attribute-description">{attr.description}</p>
-                    <input
-                      value={otherAttributes[attr.name] || ""}
-                      onChange={(e) => handleAttributeChange(attr.name, e.target.value)}
-                      placeholder=""
-                    />
-                  </div>
-                ))}
+                {iframeAttributes.map((attr) => {
+                  const currentValue = otherAttributes[attr.name] || ""
+                  const activeTokens = currentValue ? currentValue.split(" ").filter(Boolean) : []
+                  return (
+                    <div key={attr.name} className="attribute-item">
+                      <label>
+                        <a
+                          href={`https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe#${attr.name}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          {attr.name}
+                        </a>
+                      </label>
+                      <p className="attribute-description">{attr.description}</p>
+                      {attr.tokens ? (
+                        <div className="token-picker">
+                          {activeTokens.length > 0 && (
+                            <div className="token-active">
+                              {activeTokens.map((t) => (
+                                <button
+                                  key={t}
+                                  className="token-chip token-chip--active"
+                                  onClick={() => handleAttributeChange(attr.name, activeTokens.filter((x) => x !== t).join(" "))}
+                                >
+                                  {t} ✕
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                          <div className="token-available">
+                            {attr.tokens.filter((t) => !activeTokens.includes(t)).map((t) => (
+                              <button
+                                key={t}
+                                className="token-chip token-chip--available"
+                                onClick={() => handleAttributeChange(attr.name, [...activeTokens, t].join(" "))}
+                              >
+                                {t}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      ) : attr.options ? (
+                        <select
+                          value={currentValue}
+                          onChange={(e) => handleAttributeChange(attr.name, e.target.value)}
+                        >
+                          {attr.options.map((opt) => (
+                            <option key={opt} value={opt}>{opt || "(default)"}</option>
+                          ))}
+                        </select>
+                      ) : (
+                        <input
+                          value={currentValue}
+                          onChange={(e) => handleAttributeChange(attr.name, e.target.value)}
+                          placeholder=""
+                        />
+                      )}
+                    </div>
+                  )
+                })}
               </div>
             )}
           </div>

@@ -8,7 +8,8 @@
     "preview": "vite preview",
     "build-only": "vite build",
     "type-check": "tsc --noEmit",
-    "deploy": "gh-pages -d dist"
+    "deploy": "gh-pages -d dist",
+    "generate": "node scripts/generate-element-attrs.mjs"
   },
   "dependencies": {
     "react": "^19.2.0",
@@ -26,6 +27,10 @@
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",
     "@vitejs/plugin-react": "^5.1.0",
+    "@webref/css": "^8.5.1",
+    "@webref/elements": "^2.7.0",
+    "@webref/events": "^1.22.1",
+    "@webref/idl": "^3.75.0",
     "gh-pages": "^6.3.0",
     "npm-run-all": "^4.1.5",
     "typescript": "^5.9.3",

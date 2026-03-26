@@ -534,6 +534,26 @@
     "@types/babel__core" "^7.20.5"
     react-refresh "^0.18.0"
 
+"@webref/css@^8.5.1":
+  version "8.5.1"
+  resolved "https://registry.yarnpkg.com/@webref/css/-/css-8.5.1.tgz#578ac2d33e927e0d7a38f762d4a1b5e73577c1b8"
+  integrity sha512-i+LdAd8oXjbquyQLKGcCbUiR9Zr+eVpfzihLk2FpxjLtJKDbxZQoUbiGZnh41jI7KJcTBc/SiNCx43bbGqoQIQ==
+
+"@webref/elements@^2.7.0":
+  version "2.7.0"
+  resolved "https://registry.yarnpkg.com/@webref/elements/-/elements-2.7.0.tgz#fb84fc7b68b242c5768522845a2ae15e480b3611"
+  integrity sha512-8oZ1eB6BnKvUVVMud5vckSXRzxPQTw91TDFSMZVK+9CG+xzItvdCYzuhqhpGVZRpJx8T98jlQEywSFx0C4KVlg==
+
+"@webref/events@^1.22.1":
+  version "1.22.1"
+  resolved "https://registry.yarnpkg.com/@webref/events/-/events-1.22.1.tgz#bdc62757601e5e55a6039e69c4d06fd71f1be798"
+  integrity sha512-UUypBtgLviCHkPxkigj0vclgG+gYIoHpLSvk05nXBFDMSiDOwPJjK66OkCh0hjiDG/dMzzUz1D1ngzJTU9OEEQ==
+
+"@webref/idl@^3.75.0":
+  version "3.75.0"
+  resolved "https://registry.yarnpkg.com/@webref/idl/-/idl-3.75.0.tgz#904fbdb3be80bbdfd3c395596f867a3912cf21e5"
+  integrity sha512-elNqHSpNHTzaS368irlla8Dbp7neH7FhV0Cz3E9d/7GKTELdvGobA3i6tsg91w1CGy80kBmBpOCJM/3Z8KZUhw==
+
 ansi-styles@^3.2.1:
   version "3.2.1"
   resolved "https://registry.yarnpkg.com/ansi-styles/-/ansi-styles-3.2.1.tgz#41fbb20243e50b12be0f04b8dedbf07520ce841d"
