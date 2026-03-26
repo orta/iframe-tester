@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import "./IframeRenderer.css"
 
 interface IframeRendererProps {
@@ -33,6 +33,36 @@ export default function IframeRenderer(props: IframeRendererProps) {
   const [attributesExpanded, setAttributesExpanded] = useState(false)
   const timerRef = useRef<number | null>(null)
   const updateURLTimeoutRef = useRef<number | null>(null)
+  const urlTextareaRef = useRef<HTMLTextAreaElement | null>(null)
+
+  const autoResizeTextarea = useCallback(() => {
+    const el = urlTextareaRef.current
+    if (!el) return
+    el.style.height = "auto"
+    el.style.height = el.scrollHeight + "px"
+  }, [])
+
+  useEffect(() => {
+    autoResizeTextarea()
+  }, [url, autoResizeTextarea])
+
+  const urlParams: [string, string][] = (() => {
+    try {
+      return [...new URL(url).searchParams.entries()]
+    } catch {
+      return []
+    }
+  })()
+
+  const updateParam = (key: string, value: string) => {
+    try {
+      const u = new URL(url)
+      u.searchParams.set(key, value)
+      setUrl(u.toString())
+    } catch {
+      // invalid URL, ignore
+    }
+  }
 
   // Save events sidebar state to localStorage
   useEffect(() => {
@@ -99,6 +129,11 @@ export default function IframeRenderer(props: IframeRendererProps) {
       const suppress = event.data.type === "TIMER_TICK" || event.data.type === "TIMER_SYNC"
       if (suppress) {
         console.log("Suppressed TIMER event")
+        return
+      }
+
+      const isDevtools = typeof event.data?.source === "string" && /devtools/i.test(event.data.source)
+      if (isDevtools) {
         return
       }
 
@@ -179,7 +214,31 @@ export default function IframeRenderer(props: IframeRendererProps) {
         <div className="sidebar">
           <div className="sidebar-section">
             <label htmlFor="url-input">URL:</label>
-            <input id="url-input" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="Enter iframe URL" />
+            <textarea
+              id="url-input"
+              ref={urlTextareaRef}
+              value={url}
+              rows={1}
+              onChange={(e) => { setUrl(e.target.value); autoResizeTextarea() }}
+              placeholder="Enter iframe URL"
+            />
+            {urlParams.length > 0 && (
+              <table className="url-params-table">
+                <tbody>
+                  {urlParams.map(([key, value]) => (
+                    <tr key={key}>
+                      <td className="url-param-key">{key}</td>
+                      <td>
+                        <input
+                          value={value}
+                          onChange={(e) => updateParam(key, e.target.value)}
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
 
           <div className="sidebar-section">
@@ -191,11 +250,12 @@ export default function IframeRenderer(props: IframeRendererProps) {
             </div>
           </div>
 
-          <div className="sidebar-section">
+          <div className="sidebar-section autoreload-row">
             <label htmlFor="auto-reload">
               <input type="checkbox" id="auto-reload" checked={autoReload} onChange={(e) => setAutoReload(e.target.checked)} />
               Auto-reload every 5s
             </label>
+            <button className="reload-button" onClick={() => setIframekey((k) => k + 1)}>Reload</button>
           </div>
 
           <div className="sidebar-section">
