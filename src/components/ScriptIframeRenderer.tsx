@@ -107,6 +107,15 @@ export default function ScriptIframeRenderer(props: ScriptIframeRendererProps) {
   }, [scriptUrl])
 
   useEffect(() => {
+    if (props.defaultScriptUrl) {
+      const timer = setTimeout(() => {
+        loadScript()
+      }, 2000)
+      return () => clearTimeout(timer)
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
     const origin = iframeSrc ? (() => { try { return new URL(iframeSrc).origin } catch { return null } })() : null
 
     const handleMessage = (event: MessageEvent) => {
@@ -139,11 +148,23 @@ export default function ScriptIframeRenderer(props: ScriptIframeRendererProps) {
         <div className="sidebar">
           <div className="sidebar-section">
             <label htmlFor="script-url-input">Script URL:</label>
-            <input
+            <textarea
               id="script-url-input"
               value={scriptUrl}
-              onChange={(e) => setScriptUrl(e.target.value)}
+              onChange={(e) => {
+                setScriptUrl(e.target.value)
+                e.target.style.height = "auto"
+                e.target.style.height = e.target.scrollHeight + "px"
+              }}
               placeholder="https://cdn.example.com/embed.js?slug=abc"
+              rows={1}
+              style={{ resize: "none", overflow: "hidden" }}
+              ref={(el) => {
+                if (el) {
+                  el.style.height = "auto"
+                  el.style.height = el.scrollHeight + "px"
+                }
+              }}
             />
           </div>
 
