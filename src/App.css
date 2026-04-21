@@ -24,8 +24,8 @@ main {
   display: flex;
   align-items: center;
   padding: 0 20px;
-  border-bottom: 1px solid #e0e0e0;
-  background-color: #fafafa;
+  border-bottom: 1px solid var(--border-color);
+  background-color: var(--bg-panel);
   flex-shrink: 0;
   gap: 4px;
 }
@@ -36,7 +36,7 @@ main {
   background: none;
   font-size: 15px;
   font-weight: 600;
-  color: #666;
+  color: var(--text-secondary);
   cursor: pointer;
   border-bottom: 2px solid transparent;
   margin-bottom: -1px;
@@ -44,16 +44,16 @@ main {
 }
 
 .tab:hover {
-  color: #333;
+  color: var(--text-primary);
 }
 
 .tab.active {
-  color: #0066cc;
-  border-bottom-color: #0066cc;
+  color: var(--text-link);
+  border-bottom-color: var(--text-link);
 }
 
 .tab-separator {
-  color: #ccc;
+  color: var(--border-input);
   font-size: 15px;
   user-select: none;
 }
