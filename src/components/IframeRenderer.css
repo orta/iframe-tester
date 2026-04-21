@@ -36,7 +36,8 @@
   font-size: 14px;
 }
 
-.sidebar-section textarea#url-input {
+.sidebar-section textarea#url-input,
+.sidebar-section textarea#script-url-input {
   width: 100%;
   padding: 8px;
   border: 1px solid #ccc;
