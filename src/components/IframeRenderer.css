@@ -512,6 +512,35 @@
   font-family: 'SF Mono', 'Fira Code', 'Fira Mono', 'Roboto Mono', 'Courier New', monospace;
 }
 
+.event-load {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.event-load-badge {
+  font-family: 'SF Mono', 'Fira Code', 'Fira Mono', 'Roboto Mono', 'Courier New', monospace;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-link);
+  background-color: var(--bg-code);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 2px 8px;
+  white-space: nowrap;
+}
+
+.event-load-text {
+  flex: 1;
+  color: var(--text-primary);
+}
+
+.event-load-time {
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
 .load-button {
   padding: 8px 16px;
   background-color: var(--btn-bg);

@@ -12,10 +12,19 @@ interface IframeRendererProps {
 }
 
 interface ReceivedMessage {
+  kind: "message"
   data: any
   origin: string
   timestamp: string
 }
+
+interface LoadEvent {
+  kind: "load"
+  count: number
+  timestamp: string
+}
+
+type IframeEvent = ReceivedMessage | LoadEvent
 
 export default function IframeRenderer(props: IframeRendererProps) {
   const [url, setUrl] = useState(props.defaultUrl)
@@ -25,7 +34,8 @@ export default function IframeRenderer(props: IframeRendererProps) {
   const [autoReload, setAutoReload] = useState(props.autoReload)
   const [showMessageEventsRef, setShowMessageEventsRef] = useState(props.showMessageEvents)
   const [iframekey, setIframekey] = useState(1)
-  const [receivedMessages, setReceivedMessages] = useState<ReceivedMessage[]>([])
+  const [events, setEvents] = useState<IframeEvent[]>([])
+  const loadCountRef = useRef(0)
   const [eventsSidebarOpen, setEventsSidebarOpen] = useState(() => {
     const stored = localStorage.getItem("eventsSidebarOpen")
     return stored ? JSON.parse(stored) : false
@@ -144,8 +154,9 @@ export default function IframeRenderer(props: IframeRendererProps) {
       }
 
       console.log("Adding message to list")
-      setReceivedMessages((prev) => [
+      setEvents((prev) => [
         {
+          kind: "message",
           data: event.data,
           origin: event.origin,
           timestamp: new Date().toLocaleTimeString()
@@ -166,6 +177,23 @@ export default function IframeRenderer(props: IframeRendererProps) {
       ...prev,
       [key]: value
     }))
+  }
+
+  // The iframe element's load event fires on every document load, including
+  // cross-origin navigations the iframe makes itself — so it's the one signal
+  // (besides postMessage) we can observe without same-origin access. We can't
+  // read the destination URL cross-origin, only that a navigation happened.
+  const handleIframeLoad = () => {
+    loadCountRef.current += 1
+    const count = loadCountRef.current
+    setEvents((prev) => [
+      {
+        kind: "load",
+        count,
+        timestamp: new Date().toLocaleTimeString()
+      },
+      ...prev
+    ])
   }
 
   const handleMouseDown = (direction: "top" | "right" | "bottom" | "left") => (e: React.MouseEvent) => {
@@ -340,7 +368,7 @@ export default function IframeRenderer(props: IframeRendererProps) {
 
         <div className="main-content">
           <div className="iframe-container">
-            <iframe key={iframekey} width={width} height={height} src={url} {...otherAttributes}></iframe>
+            <iframe key={iframekey} width={width} height={height} src={url} onLoad={handleIframeLoad} {...otherAttributes}></iframe>
             <div className="resize-handle resize-handle-top" onMouseDown={handleMouseDown("top")}></div>
             <div className="resize-handle resize-handle-right" onMouseDown={handleMouseDown("right")}></div>
             <div className="resize-handle resize-handle-bottom" onMouseDown={handleMouseDown("bottom")}></div>
@@ -355,10 +383,10 @@ export default function IframeRenderer(props: IframeRendererProps) {
           {eventsSidebarOpen && (
             <div className="events-sidebar-content">
               <div className="events-sidebar-header">
-                <h3>Received Messages ({receivedMessages.length})</h3>
+                <h3>Events ({events.length})</h3>
                 <div className="header-controls">
-                  {receivedMessages.length > 0 && (
-                    <button className="clear-button" onClick={() => setReceivedMessages([])}>
+                  {events.length > 0 && (
+                    <button className="clear-button" onClick={() => setEvents([])}>
                       Clear
                     </button>
                   )}
@@ -371,12 +399,23 @@ export default function IframeRenderer(props: IframeRendererProps) {
                 </label>
               </div>
               <div className="events-list">
-                {receivedMessages.length === 0 ? (
+                {events.length === 0 ? (
                   <p className="no-events">No events received yet</p>
                 ) : (
                   <ul>
-                    {receivedMessages.map((msg, index) => {
-                      const displayMsg = filterByIframeOrigin ? { data: msg.data, timestamp: msg.timestamp } : msg
+                    {events.map((event, index) => {
+                      if (event.kind === "load") {
+                        return (
+                          <li key={index} className="event-load">
+                            <span className="event-load-badge">↻ load</span>
+                            <span className="event-load-text">iframe loaded (#{event.count})</span>
+                            <span className="event-load-time">{event.timestamp}</span>
+                          </li>
+                        )
+                      }
+                      const displayMsg = filterByIframeOrigin
+                        ? { data: event.data, timestamp: event.timestamp }
+                        : { data: event.data, origin: event.origin, timestamp: event.timestamp }
                       return (
                         <li key={index}>
                           <pre>
