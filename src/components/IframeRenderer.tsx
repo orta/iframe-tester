@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react"
+import { useState, useEffect, useRef, useCallback, useLayoutEffect } from "react"
 import "./IframeRenderer.css"
 import { iframeAttributes } from "../data/element-attrs"
 
@@ -13,6 +13,7 @@ interface IframeRendererProps {
 
 interface ReceivedMessage {
   kind: "message"
+  id: number
   data: any
   origin: string
   timestamp: string
@@ -20,11 +21,45 @@ interface ReceivedMessage {
 
 interface LoadEvent {
   kind: "load"
+  id: number
   count: number
   timestamp: string
 }
 
 type IframeEvent = ReceivedMessage | LoadEvent
+
+// A single postMessage log: clamped to ~6 lines until clicked, then animates
+// open to its full height. `collapsible` is measured so short logs stay static.
+function EventLogItem({ title, json }: { title: string | null; json: string }) {
+  const preRef = useRef<HTMLPreElement>(null)
+  const [expanded, setExpanded] = useState(false)
+  const [collapsible, setCollapsible] = useState(false)
+  const [maxHeight, setMaxHeight] = useState<number | undefined>(undefined)
+
+  useLayoutEffect(() => {
+    const el = preRef.current
+    if (el) setCollapsible(el.scrollHeight > el.clientHeight + 1)
+  }, [json])
+
+  useLayoutEffect(() => {
+    const el = preRef.current
+    setMaxHeight(expanded && el ? el.scrollHeight : undefined)
+  }, [expanded])
+
+  return (
+    <li>
+      {title && <div className="event-title">{title}</div>}
+      <pre
+        ref={preRef}
+        className={`event-json${collapsible ? " collapsible" : ""}${expanded ? " expanded" : ""}`}
+        style={maxHeight != null ? { maxHeight } : undefined}
+        onClick={collapsible ? () => setExpanded((e) => !e) : undefined}
+      >
+        <code>{json}</code>
+      </pre>
+    </li>
+  )
+}
 
 export default function IframeRenderer(props: IframeRendererProps) {
   const [url, setUrl] = useState(props.defaultUrl)
@@ -36,6 +71,7 @@ export default function IframeRenderer(props: IframeRendererProps) {
   const [iframekey, setIframekey] = useState(1)
   const [events, setEvents] = useState<IframeEvent[]>([])
   const loadCountRef = useRef(0)
+  const eventIdRef = useRef(0)
   const [eventsSidebarOpen, setEventsSidebarOpen] = useState(() => {
     const stored = localStorage.getItem("eventsSidebarOpen")
     return stored ? JSON.parse(stored) : false
@@ -154,9 +190,11 @@ export default function IframeRenderer(props: IframeRendererProps) {
       }
 
       console.log("Adding message to list")
+      const id = eventIdRef.current++
       setEvents((prev) => [
         {
           kind: "message",
+          id,
           data: event.data,
           origin: event.origin,
           timestamp: new Date().toLocaleTimeString()
@@ -186,9 +224,11 @@ export default function IframeRenderer(props: IframeRendererProps) {
   const handleIframeLoad = () => {
     loadCountRef.current += 1
     const count = loadCountRef.current
+    const id = eventIdRef.current++
     setEvents((prev) => [
       {
         kind: "load",
+        id,
         count,
         timestamp: new Date().toLocaleTimeString()
       },
@@ -357,9 +397,9 @@ export default function IframeRenderer(props: IframeRendererProps) {
   width="${width}"
   height="${height}"
   src="${url}"${Object.entries(otherAttributes).filter(([, value]) => value).length > 0 ? "\n  " : ""}${Object.entries(otherAttributes)
-                  .filter(([, value]) => value)
-                  .map(([key, value]) => `${key}="${value}"`)
-                  .join("\n  ")}
+                    .filter(([, value]) => value)
+                    .map(([key, value]) => `${key}="${value}"`)
+                    .join("\n  ")}
 ></iframe>`}
               </code>
             </pre>
@@ -403,26 +443,21 @@ export default function IframeRenderer(props: IframeRendererProps) {
                   <p className="no-events">No events received yet</p>
                 ) : (
                   <ul>
-                    {events.map((event, index) => {
+                    {events.map((event) => {
                       if (event.kind === "load") {
                         return (
-                          <li key={index} className="event-load">
+                          <li key={event.id} className="event-load">
                             <span className="event-load-badge">↻ load</span>
                             <span className="event-load-text">iframe loaded (#{event.count})</span>
                             <span className="event-load-time">{event.timestamp}</span>
                           </li>
                         )
                       }
+                      const title = event.data && typeof event.data.type === "string" ? event.data.type : null
                       const displayMsg = filterByIframeOrigin
                         ? { data: event.data, timestamp: event.timestamp }
                         : { data: event.data, origin: event.origin, timestamp: event.timestamp }
-                      return (
-                        <li key={index}>
-                          <pre>
-                            <code>{JSON.stringify(displayMsg, null, 2)}</code>
-                          </pre>
-                        </li>
-                      )
+                      return <EventLogItem key={event.id} title={title} json={JSON.stringify(displayMsg, null, 2)} />
                     })}
                   </ul>
                 )}

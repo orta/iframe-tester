@@ -541,6 +541,44 @@
   white-space: nowrap;
 }
 
+.event-title {
+  font-family: 'SF Mono', 'Fira Code', 'Fira Mono', 'Roboto Mono', 'Courier New', monospace;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-link);
+  margin-bottom: 6px;
+  word-break: break-word;
+}
+
+/* Clamp logs to ~6 lines (incl. 12px padding + 1px border, border-box) until expanded */
+.event-json {
+  max-height: 134px;
+  overflow: hidden;
+  position: relative;
+  transition: max-height 0.3s ease;
+}
+
+.event-json.collapsible {
+  cursor: pointer;
+}
+
+.event-json.collapsible:hover {
+  border-color: var(--text-link);
+}
+
+/* Fade hint that there's more below when collapsed */
+.event-json.collapsible:not(.expanded)::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 36px;
+  background: linear-gradient(to bottom, transparent, var(--bg-code));
+  pointer-events: none;
+  border-radius: 0 0 6px 6px;
+}
+
 .load-button {
   padding: 8px 16px;
   background-color: var(--btn-bg);
